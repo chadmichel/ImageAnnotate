@@ -12,17 +12,23 @@ export class ImageEditorComponent implements OnInit {
   @ViewChild('drawContainer') drawContainer: any;
 
   stage: Konva.Stage | undefined = undefined;
+  image: Konva.Image | undefined = undefined;
+
+  backlayer = new Konva.Layer();
   layer = new Konva.Layer();
   transformer = new Konva.Transformer();
 
   width = 0;
   height = 0;
 
+  textNode: any = undefined;
+  textarea: any = undefined;
+
+  defaultFontSize = 20;
+
   constructor() {}
 
   ngOnInit(): void {
-    this.layer = new Konva.Layer();
-
     this.width = document.getElementById('drawContainer')!.offsetWidth;
     this.height = document.getElementById('drawContainer')!.offsetHeight;
 
@@ -37,7 +43,23 @@ export class ImageEditorComponent implements OnInit {
     this.transformer = new Konva.Transformer();
     this.layer.add(this.transformer);
 
+    this.stage.add(this.backlayer);
     this.stage.add(this.layer);
+
+    Konva.Image.fromURL('assets/can.jpg', (image) => {
+      this.image = image;
+      this.backlayer.add(image);
+      this.image.width(this.width);
+      this.image.height(this.height);
+    });
+
+    this.image = new Konva.Image({
+      x: 0,
+      y: 0,
+      image: new Image(),
+      width: this.width,
+      height: this.height,
+    });
 
     this.stage.on('click tap', (e) => {
       if (this.textNode && this.textarea) {
@@ -86,14 +108,9 @@ export class ImageEditorComponent implements OnInit {
             this.swapBack();
           }
         });
-
-        setTimeout(() => {});
       }
     });
   }
-
-  textNode: any = undefined;
-  textarea: any = undefined;
 
   handleOutsideClick(e: any) {
     this.swapBack();
@@ -101,9 +118,13 @@ export class ImageEditorComponent implements OnInit {
 
   swapBack() {
     this.textNode.text(this.textarea.value);
+    this.textNode.fontSize(this.defaultFontSize);
     this.textNode.show();
     document.body.removeChild(this.textarea);
 
+    this.transformer.show();
+
+    const thisTextNode = this.textNode;
     this.textNode = undefined;
     this.textarea = undefined;
   }
@@ -144,9 +165,11 @@ export class ImageEditorComponent implements OnInit {
       x: this.width / 2 - 100,
       y: this.height / 2 - 25,
       width: 200,
-      text: 'Some text here',
-      fontSize: 20,
+      text: 'Edit Me',
+      fontSize: this.defaultFontSize,
       draggable: true,
+      fill: '#ffffff',
+      align: 'center',
     });
 
     this.layer.add(tn);
