@@ -1,0 +1,15 @@
+
+
+.content {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+#drawContainer {
+  flex: 1;
+  min-height: 100vh;
+  width: 100%;
+  border: 1px solid black;
+}
+
