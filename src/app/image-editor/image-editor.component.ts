@@ -21,16 +21,24 @@ export class ImageEditorComponent implements OnInit {
   width = 0;
   height = 0;
 
+  centerX = 0;
+  centerY = 0;
+
   textNode: any = undefined;
   textarea: any = undefined;
 
   defaultFontSize = 20;
+
+  statusMessage = '';
 
   constructor() {}
 
   ngOnInit(): void {
     this.width = document.getElementById('drawContainer')!.offsetWidth;
     this.height = document.getElementById('drawContainer')!.offsetHeight;
+
+    this.centerX = this.width / 2;
+    this.centerY = this.height / 2;
 
     console.log('width: ' + this.width + ' height: ' + this.height);
 
@@ -51,6 +59,7 @@ export class ImageEditorComponent implements OnInit {
       this.backlayer.add(image);
       this.image.width(this.width);
       this.image.height(this.height);
+      this.image.draggable(false);
     });
 
     this.image = new Konva.Image({
@@ -61,7 +70,14 @@ export class ImageEditorComponent implements OnInit {
       height: this.height,
     });
 
-    this.stage.on('click tap', (e) => {
+    this.setDefaultMode();
+  }
+
+  setDefaultMode(selectedItem?: any) {
+    this.stage!.off('click tap');
+    this.stage!.off('dblclick dbltap');
+
+    this.stage!.on('click tap', (e) => {
       if (this.textNode && this.textarea) {
         this.swapBack();
         return;
@@ -71,11 +87,13 @@ export class ImageEditorComponent implements OnInit {
         return;
       }
 
-      this.transformer.nodes([e.target]);
+      if (e.target != this.image) {
+        this.transformer.nodes([e.target]);
+      }
     });
 
     // https://konvajs.org/docs/sandbox/Editable_Text.html
-    this.stage.on('dblclick dbltap', (e) => {
+    this.stage!.on('dblclick dbltap', (e) => {
       const shape = e.target;
       this.textNode = e.target as any;
 
@@ -110,6 +128,53 @@ export class ImageEditorComponent implements OnInit {
         });
       }
     });
+
+    this.statusMessage = 'Add shapes to the image';
+    if (selectedItem) {
+      this.transformer.nodes([selectedItem]);
+    } else {
+      this.transformer.nodes([]);
+    }
+  }
+
+  setAddRectMode() {
+    this.statusMessage = 'Click on the image to add a rectangle';
+    this.transformer.nodes([]);
+    this.stage!.off('click tap');
+    this.stage!.off('dblclick dbltap');
+    this.stage!.on('click tap', (e) => {
+      this.addRect(e.evt.offsetX, e.evt.offsetY);
+    });
+  }
+
+  setAddCircleMode() {
+    this.statusMessage = 'Click on the image to add a circle';
+    this.transformer.nodes([]);
+    this.stage!.off('click tap');
+    this.stage!.off('dblclick dbltap');
+    this.stage!.on('click tap', (e) => {
+      this.addCircle(e.evt.offsetX, e.evt.offsetY);
+    });
+  }
+
+  setAddTextMode() {
+    this.statusMessage = 'Click on the image to add text';
+    this.transformer.nodes([]);
+    this.stage!.off('click tap');
+    this.stage!.off('dblclick dbltap');
+    this.stage!.on('click tap', (e) => {
+      this.addText(e.evt.offsetX, e.evt.offsetY);
+    });
+  }
+
+  setAddLineMode() {
+    this.statusMessage = 'Click on the image to add a line';
+    this.transformer.nodes([]);
+    this.stage!.off('click tap');
+    this.stage!.off('dblclick dbltap');
+    this.stage!.on('click tap', (e) => {
+      this.addLine(e.evt.offsetX, e.evt.offsetY);
+    });
   }
 
   handleOutsideClick(e: any) {
@@ -129,10 +194,10 @@ export class ImageEditorComponent implements OnInit {
     this.textarea = undefined;
   }
 
-  addRect() {
+  addRect(x: number, y: number) {
     const box = new Konva.Rect({
-      x: this.width / 2 - 100,
-      y: this.height / 2 - 50,
+      x: x,
+      y: y,
       width: 200,
       height: 100,
 
@@ -143,12 +208,14 @@ export class ImageEditorComponent implements OnInit {
 
     this.layer.add(box);
     this.transformer.nodes([box]);
+
+    this.setDefaultMode(box);
   }
 
-  addCircle() {
+  addCircle(x: number, y: number) {
     const circleNode = new Konva.Circle({
-      x: this.width / 2 - 25,
-      y: this.height / 2 - 25,
+      x: x,
+      y: y,
       height: 100,
 
       stroke: 'black',
@@ -158,12 +225,14 @@ export class ImageEditorComponent implements OnInit {
 
     this.layer.add(circleNode);
     this.transformer.nodes([circleNode]);
+
+    this.setDefaultMode(circleNode);
   }
 
-  addText() {
+  addText(x: number, y: number) {
     const tn = new Konva.Text({
-      x: this.width / 2 - 100,
-      y: this.height / 2 - 25,
+      x: x,
+      y: y,
       width: 200,
       text: 'Edit Me',
       fontSize: this.defaultFontSize,
@@ -174,5 +243,21 @@ export class ImageEditorComponent implements OnInit {
 
     this.layer.add(tn);
     this.transformer.nodes([tn]);
+    this.setDefaultMode(tn);
+  }
+
+  addLine(x: number, y: number) {
+    const line = new Konva.Line({
+      points: [x - 100, y, x + 100, y],
+      stroke: 'black',
+      strokeWidth: 4,
+      lineCap: 'round',
+      lineJoin: 'round',
+      draggable: true,
+    });
+
+    this.layer.add(line);
+    this.transformer.nodes([line]);
+    this.setDefaultMode(line);
   }
 }

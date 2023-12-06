@@ -1,6 +1,10 @@
 <div class="content">
-  <button (click)="addRect()">Add Rectangle</button>
-  <button (click)="addCircle()">Add Circle</button>
-  <button (click)="addText()">Add Text</button>
+  <div id="toolbar">
+    <button (click)="setAddRectMode()">Add Rectangle</button>
+    <button (click)="setAddCircleMode()">Add Circle</button>
+    <button (click)="setAddTextMode()">Add Text</button>
+    <button (click)="setAddLineMode()">Add Line</button>
+  </div>
   <div id="drawContainer"></div>
+  <div id="status">{{ statusMessage }}</div>
 </div>
