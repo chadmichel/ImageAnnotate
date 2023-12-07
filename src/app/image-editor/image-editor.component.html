@@ -1,5 +1,12 @@
 <div id="mainContent" class="content">
   <div id="toolbar">
+    <input
+      type="file"
+      (change)="onFileChanged($event)"
+      style="display: none"
+      #fileInput
+    />
+    <button (click)="fileInput.click()">Select File</button>
     <button (click)="setAddRectMode()">Add Rectangle</button>
     <button (click)="setAddCircleMode()">Add Circle</button>
     <button (click)="setAddTextMode()">Add Text</button>

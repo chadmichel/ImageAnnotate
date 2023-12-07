@@ -96,6 +96,22 @@ export class ImageEditorComponent implements OnInit {
     });
   }
 
+  onFileChanged(event: any) {
+    const file = event.target.files[0];
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = () => {
+      this.backlayer.removeChildren();
+      Konva.Image.fromURL(reader.result as string, (image) => {
+        this.image = image;
+        this.backlayer.add(image);
+        this.image.width(this.width);
+        this.image.height(this.height);
+        this.image.draggable(false);
+      });
+    };
+  }
+
   setDefaultMode(selectedItem?: any) {
     this.stage!.off('click tap');
     this.stage!.off('dblclick dbltap');
