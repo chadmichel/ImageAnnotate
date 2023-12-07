@@ -31,6 +31,8 @@ export class ImageEditorComponent implements OnInit {
 
   statusMessage = '';
 
+  color: string = '#000000';
+
   constructor() {}
 
   ngOnInit(): void {
@@ -71,6 +73,27 @@ export class ImageEditorComponent implements OnInit {
     });
 
     this.setDefaultMode();
+
+    window.addEventListener('resize', this.resize.bind(this));
+  }
+
+  resize() {
+    this.width = document.getElementById('drawContainer')!.offsetWidth;
+    this.height = document.getElementById('drawContainer')!.offsetHeight;
+
+    console.log('width: ' + this.width + ' height: ' + this.height);
+
+    this.centerX = this.width / 2;
+    this.centerY = this.height / 2;
+
+    this.backlayer.removeChildren();
+    Konva.Image.fromURL('assets/can.jpg', (image) => {
+      this.image = image;
+      this.backlayer.add(image);
+      this.image.width(this.width);
+      this.image.height(this.height);
+      this.image.draggable(false);
+    });
   }
 
   setDefaultMode(selectedItem?: any) {
@@ -177,6 +200,24 @@ export class ImageEditorComponent implements OnInit {
     });
   }
 
+  setColor(color: string) {
+    this.color = color;
+
+    if (this.transformer.nodes().length > 0) {
+      const selectedNode = this.transformer.nodes()[0] as any;
+      if (selectedNode) {
+        if (selectedNode.attrs.name === 'rect') {
+          selectedNode.stroke(color);
+          this.layer.draw();
+        }
+        if (selectedNode.attrs.name === 'circle') {
+          selectedNode.stroke(color);
+          this.layer.draw();
+        }
+      }
+    }
+  }
+
   handleOutsideClick(e: any) {
     this.swapBack();
   }
@@ -201,9 +242,10 @@ export class ImageEditorComponent implements OnInit {
       width: 200,
       height: 100,
 
-      stroke: 'black',
+      stroke: this.color,
       strokeWidth: 4,
       draggable: true,
+      name: 'rect',
     });
 
     this.layer.add(box);
@@ -218,9 +260,10 @@ export class ImageEditorComponent implements OnInit {
       y: y,
       height: 100,
 
-      stroke: 'black',
+      stroke: this.color,
       strokeWidth: 4,
       draggable: true,
+      name: 'circle',
     });
 
     this.layer.add(circleNode);
@@ -237,8 +280,9 @@ export class ImageEditorComponent implements OnInit {
       text: 'Edit Me',
       fontSize: this.defaultFontSize,
       draggable: true,
-      fill: '#ffffff',
+      fill: this.color,
       align: 'center',
+      name: 'text',
     });
 
     this.layer.add(tn);
@@ -249,15 +293,25 @@ export class ImageEditorComponent implements OnInit {
   addLine(x: number, y: number) {
     const line = new Konva.Line({
       points: [x - 100, y, x + 100, y],
-      stroke: 'black',
+      stroke: this.color,
       strokeWidth: 4,
       lineCap: 'round',
       lineJoin: 'round',
       draggable: true,
+      name: 'line',
     });
 
     this.layer.add(line);
     this.transformer.nodes([line]);
     this.setDefaultMode(line);
+  }
+
+  addTempLinePoints(x: number, y: number) {
+    const line = this.transformer.nodes()[0] as Konva.Line;
+    const points = line.points();
+    points.push(x);
+    points.push(y);
+    line.points(points);
+    this.layer.add(line);
   }
 }

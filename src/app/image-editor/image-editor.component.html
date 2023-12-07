@@ -1,9 +1,11 @@
-<div class="content">
+<div id="mainContent" class="content">
   <div id="toolbar">
     <button (click)="setAddRectMode()">Add Rectangle</button>
     <button (click)="setAddCircleMode()">Add Circle</button>
     <button (click)="setAddTextMode()">Add Text</button>
     <button (click)="setAddLineMode()">Add Line</button>
+    <button (click)="setColor('black')">Black</button>
+    <button (click)="setColor('white')">White</button>
   </div>
   <div id="drawContainer"></div>
   <div id="status">{{ statusMessage }}</div>
