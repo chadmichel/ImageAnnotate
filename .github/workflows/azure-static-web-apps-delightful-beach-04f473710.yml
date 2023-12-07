@@ -27,7 +27,7 @@ jobs:
       - name: NPM Install
         run: npm install
       - name: Ng Build
-        run: ng build
+        run: npm run build 
       - name: Build And Deploy
         id: builddeploy
         uses: Azure/static-web-apps-deploy@v1
