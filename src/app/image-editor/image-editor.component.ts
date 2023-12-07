@@ -216,6 +216,16 @@ export class ImageEditorComponent implements OnInit {
     });
   }
 
+  setAddArrowMode() {
+    this.statusMessage = 'Click on the image to add an arrow';
+    this.transformer.nodes([]);
+    this.stage!.off('click tap');
+    this.stage!.off('dblclick dbltap');
+    this.stage!.on('click tap', (e) => {
+      this.addArrow(e.evt.offsetX, e.evt.offsetY);
+    });
+  }
+
   setColor(color: string) {
     this.color = color;
 
@@ -227,6 +237,18 @@ export class ImageEditorComponent implements OnInit {
           this.layer.draw();
         }
         if (selectedNode.attrs.name === 'circle') {
+          selectedNode.stroke(color);
+          this.layer.draw();
+        }
+        if (selectedNode.attrs.name === 'line') {
+          selectedNode.stroke(color);
+          this.layer.draw();
+        }
+        if (selectedNode.attrs.name === 'text') {
+          selectedNode.fill(color);
+          this.layer.draw();
+        }
+        if (selectedNode.attrs.name === 'arrow') {
           selectedNode.stroke(color);
           this.layer.draw();
         }
@@ -320,6 +342,39 @@ export class ImageEditorComponent implements OnInit {
     this.layer.add(line);
     this.transformer.nodes([line]);
     this.setDefaultMode(line);
+  }
+
+  addArrow(x: number, y: number) {
+    // const arrow = new Konva.Arrow({
+    //   x: x,
+    //   y: y,
+    //   points: [x - 100, y, x + 100, y],
+    //   fill: this.color,
+    //   stroke: this.color,
+    //   strokeWidth: 4,
+    //   pointerLength: 50,
+    //   pointerWidth: 50,
+
+    //   draggable: true,
+    //   name: 'arrow',
+    // });
+
+    var arrow = new Konva.Arrow({
+      x: x,
+      y: y,
+      points: [0, 0, 200, 0],
+      pointerLength: 20,
+      pointerWidth: 20,
+      fill: 'black',
+      stroke: 'black',
+      strokeWidth: 4,
+      draggable: true,
+      name: 'arrow',
+    });
+
+    this.layer.add(arrow);
+    this.transformer.nodes([arrow]);
+    this.setDefaultMode(arrow);
   }
 
   addTempLinePoints(x: number, y: number) {
