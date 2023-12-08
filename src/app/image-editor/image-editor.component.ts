@@ -33,11 +33,14 @@ export class ImageEditorComponent implements OnInit {
 
   color: string = '#000000';
 
+  file: any;
+  imageUrl: string = 'assets/can.jpg';
+
   constructor() {}
 
   ngOnInit(): void {
-    this.width = document.getElementById('drawContainer')!.offsetWidth;
-    this.height = document.getElementById('drawContainer')!.offsetHeight;
+    this.width = window.innerWidth;
+    this.height = window.innerHeight - 50;
 
     this.centerX = this.width / 2;
     this.centerY = this.height / 2;
@@ -56,21 +59,7 @@ export class ImageEditorComponent implements OnInit {
     this.stage.add(this.backlayer);
     this.stage.add(this.layer);
 
-    Konva.Image.fromURL('assets/can.jpg', (image) => {
-      this.image = image;
-      this.backlayer.add(image);
-      this.image.width(this.width);
-      this.image.height(this.height);
-      this.image.draggable(false);
-    });
-
-    this.image = new Konva.Image({
-      x: 0,
-      y: 0,
-      image: new Image(),
-      width: this.width,
-      height: this.height,
-    });
+    this.resize();
 
     this.setDefaultMode();
 
@@ -78,36 +67,68 @@ export class ImageEditorComponent implements OnInit {
   }
 
   resize() {
+    var container = document.getElementById('drawContainer');
     this.width = document.getElementById('drawContainer')!.offsetWidth;
     this.height = document.getElementById('drawContainer')!.offsetHeight;
 
     console.log('width: ' + this.width + ' height: ' + this.height);
 
+    const height2 = window.innerHeight;
+    const width2 = window.innerWidth;
+    console.log('width2: ' + width2 + ' height2: ' + height2);
+
+    if (container) {
+      container.style.height = height2 + 'px';
+    }
+
+    this.stage?.height(height2);
+    this.stage?.width(width2);
+
+    this.width = width2;
+    this.height = height2 - 50;
+
     this.centerX = this.width / 2;
     this.centerY = this.height / 2;
 
     this.backlayer.removeChildren();
-    Konva.Image.fromURL('assets/can.jpg', (image) => {
+    Konva.Image.fromURL(this.imageUrl, (image) => {
       this.image = image;
       this.backlayer.add(image);
-      this.image.width(this.width);
-      this.image.height(this.height);
       this.image.draggable(false);
+
+      if (this.image) {
+        if (this.image?.width() > this.image?.height()) {
+          const ratio = this.image?.width() / this.image?.height();
+          const scaleRatio = this.width / this.image?.width();
+          this.image?.scale({ x: scaleRatio, y: scaleRatio });
+        } else {
+          const ratio = this.image?.width() / this.image?.height();
+          const scaleRatio = this.height / this.image?.height();
+          this.image?.scale({ x: scaleRatio, y: scaleRatio });
+        }
+      }
     });
   }
 
   onFileChanged(event: any) {
-    const file = event.target.files[0];
+    this.file = event.target.files[0];
     const reader = new FileReader();
-    reader.readAsDataURL(file);
+    reader.readAsDataURL(this.file);
     reader.onload = () => {
+      this.imageUrl = reader.result as string;
       this.backlayer.removeChildren();
-      Konva.Image.fromURL(reader.result as string, (image) => {
-        this.image = image;
-        this.backlayer.add(image);
-        this.image.width(this.width);
-        this.image.height(this.height);
-        this.image.draggable(false);
+      Konva.Image.fromURL(this.imageUrl, (image) => {
+        if (this.image) {
+          if (this.image?.width() > this.image?.height()) {
+            const ratio = this.image?.height() / this.image?.width();
+            this.image?.width(this.width);
+            this.image?.height(this.width * ratio);
+          } else {
+            const ratio = this.image?.width() / this.image?.height();
+            this.image?.height(this.height);
+            this.image?.width(this.height * ratio);
+          }
+        }
       });
     };
   }
@@ -345,20 +366,6 @@ export class ImageEditorComponent implements OnInit {
   }
 
   addArrow(x: number, y: number) {
-    // const arrow = new Konva.Arrow({
-    //   x: x,
-    //   y: y,
-    //   points: [x - 100, y, x + 100, y],
-    //   fill: this.color,
-    //   stroke: this.color,
-    //   strokeWidth: 4,
-    //   pointerLength: 50,
-    //   pointerWidth: 50,
-
-    //   draggable: true,
-    //   name: 'arrow',
-    // });
-
     var arrow = new Konva.Arrow({
       x: x,
       y: y,
