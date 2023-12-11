@@ -77,10 +77,6 @@ export class ImageEditorComponent implements OnInit {
     const width2 = window.innerWidth;
     console.log('width2: ' + width2 + ' height2: ' + height2);
 
-    if (container) {
-      container.style.height = height2 + 'px';
-    }
-
     this.stage?.height(height2);
     this.stage?.width(width2);
 
@@ -89,6 +85,10 @@ export class ImageEditorComponent implements OnInit {
 
     this.centerX = this.width / 2;
     this.centerY = this.height / 2;
+
+    if (container) {
+      container.style.height = this.height + 'px';
+    }
 
     this.backlayer.removeChildren();
     Konva.Image.fromURL(this.imageUrl, (image) => {
@@ -203,7 +203,20 @@ export class ImageEditorComponent implements OnInit {
     this.stage!.off('click tap');
     this.stage!.off('dblclick dbltap');
     this.stage!.on('click tap', (e) => {
-      this.addRect(e.evt.offsetX, e.evt.offsetY);
+      // if mobile
+      if (e.evt.changedTouches.length > 0) {
+        this.addRect(
+          e.evt.changedTouches[0].pageX,
+          e.evt.changedTouches[0].pageY
+        );
+        return;
+      }
+      // if desktop
+      if (e.evt.button === 0) {
+        this.addRect(e.evt.offsetX, e.evt.offsetY);
+        return;
+      }
+      this.addRect(this.centerX, this.centerY);
     });
   }
 
