@@ -67,17 +67,11 @@ export class ImageEditorComponent implements OnInit {
   }
 
   resize() {
-    var container = document.getElementById('drawContainer');
-    this.width = document.getElementById('drawContainer')!.offsetWidth;
-    this.height = document.getElementById('drawContainer')!.offsetHeight;
-
-    console.log('width: ' + this.width + ' height: ' + this.height);
-
     const height2 = window.innerHeight;
     const width2 = window.innerWidth;
     console.log('width2: ' + width2 + ' height2: ' + height2);
 
-    this.stage?.height(height2);
+    this.stage?.height(height2 - 50);
     this.stage?.width(width2);
 
     this.width = width2;
@@ -86,6 +80,7 @@ export class ImageEditorComponent implements OnInit {
     this.centerX = this.width / 2;
     this.centerY = this.height / 2;
 
+    var container = document.getElementById('drawContainer');
     if (container) {
       container.style.height = this.height + 'px';
     }
@@ -105,13 +100,10 @@ export class ImageEditorComponent implements OnInit {
 
         if (this.image?.width() > this.image?.height()) {
           const scaleRatio = this.width / this.image?.width();
-          //this.image?.scale({ x: scaleRatio, y: scaleRatio });
           ih2 = ih1 * scaleRatio;
           iw2 = iw1 * scaleRatio;
         } else {
           const scaleRatio = this.height / this.image?.height();
-          // this.image?.height(ih1 * scaleRatio);
-          // this.image?.width(iw1 * scaleRatio);
           ih2 = ih1 * scaleRatio;
           iw2 = iw1 * scaleRatio;
         }
@@ -130,22 +122,20 @@ export class ImageEditorComponent implements OnInit {
         console.log('ih1: ' + ih1 + ' iw1: ' + iw1);
         console.log('ih2: ' + ih2 + ' iw2: ' + iw2);
 
-        if (this.image) {
-          this.image?.height(ih2);
-          this.image?.width(iw2);
-        }
-
-        // if (this.image?.width() > this.width) {
-        //   const scaleRatio = this.width / this.image?.width();
-        //   this.image?.scale({ x: scaleRatio, y: scaleRatio });
-        //   this.image?.scale({ x: 1.5, y: 1.5 });
-        // }
-        // if (this.image?.height() > this.height) {
-        //   const scaleRatio = this.height / this.image?.height();
-        //   this.image?.scale({ x: scaleRatio, y: scaleRatio });
-        // }
+        this.image?.height(ih2);
+        this.image?.width(iw2);
       }
     });
+  }
+
+  async downloadImage() {
+    var i = (await this.stage?.toImage()) as any;
+    var d = await this.stage?.toDataURL();
+
+    var w = window.open('');
+    if (w) {
+      w.document.write(i?.outerHTML);
+    }
   }
 
   onFileChanged(event: any) {
@@ -242,7 +232,7 @@ export class ImageEditorComponent implements OnInit {
     this.stage!.off('dblclick dbltap');
     this.stage!.on('click tap', (e) => {
       // if mobile
-      if (e.evt.changedTouches.length > 0) {
+      if (e.evt?.changedTouches?.length > 0) {
         this.addRect(
           e.evt.changedTouches[0].pageX,
           e.evt.changedTouches[0].pageY
@@ -264,7 +254,20 @@ export class ImageEditorComponent implements OnInit {
     this.stage!.off('click tap');
     this.stage!.off('dblclick dbltap');
     this.stage!.on('click tap', (e) => {
-      this.addCircle(e.evt.offsetX, e.evt.offsetY);
+      // if mobile
+      if (e.evt?.changedTouches?.length > 0) {
+        this.addCircle(
+          e.evt.changedTouches[0].pageX,
+          e.evt.changedTouches[0].pageY
+        );
+        return;
+      }
+      // if desktop
+      if (e.evt.button === 0) {
+        this.addCircle(e.evt.offsetX, e.evt.offsetY);
+        return;
+      }
+      this.addCircle(this.centerX, this.centerY);
     });
   }
 
@@ -274,7 +277,20 @@ export class ImageEditorComponent implements OnInit {
     this.stage!.off('click tap');
     this.stage!.off('dblclick dbltap');
     this.stage!.on('click tap', (e) => {
-      this.addText(e.evt.offsetX, e.evt.offsetY);
+      // if mobile
+      if (e.evt?.changedTouches?.length > 0) {
+        this.addText(
+          e.evt.changedTouches[0].pageX,
+          e.evt.changedTouches[0].pageY
+        );
+        return;
+      }
+      // if desktop
+      if (e.evt.button === 0) {
+        this.addText(e.evt.offsetX, e.evt.offsetY);
+        return;
+      }
+      this.addText(this.centerX, this.centerY);
     });
   }
 
@@ -284,7 +300,20 @@ export class ImageEditorComponent implements OnInit {
     this.stage!.off('click tap');
     this.stage!.off('dblclick dbltap');
     this.stage!.on('click tap', (e) => {
-      this.addLine(e.evt.offsetX, e.evt.offsetY);
+      // if mobile
+      if (e.evt?.changedTouches?.length > 0) {
+        this.addLine(
+          e.evt.changedTouches[0].pageX,
+          e.evt.changedTouches[0].pageY
+        );
+        return;
+      }
+      // if desktop
+      if (e.evt.button === 0) {
+        this.addLine(e.evt.offsetX, e.evt.offsetY);
+        return;
+      }
+      this.addLine(this.centerX, this.centerY);
     });
   }
 
@@ -294,7 +323,20 @@ export class ImageEditorComponent implements OnInit {
     this.stage!.off('click tap');
     this.stage!.off('dblclick dbltap');
     this.stage!.on('click tap', (e) => {
-      this.addArrow(e.evt.offsetX, e.evt.offsetY);
+      // if mobile
+      if (e.evt?.changedTouches?.length > 0) {
+        this.addLine(
+          e.evt.changedTouches[0].pageX,
+          e.evt.changedTouches[0].pageY
+        );
+        return;
+      }
+      // if desktop
+      if (e.evt.button === 0) {
+        this.addLine(e.evt.offsetX, e.evt.offsetY);
+        return;
+      }
+      this.addArrow(this.centerX, this.centerY);
     });
   }
 
