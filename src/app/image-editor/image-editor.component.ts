@@ -97,15 +97,53 @@ export class ImageEditorComponent implements OnInit {
       this.image.draggable(false);
 
       if (this.image) {
+        const ih1 = this.image?.height();
+        const iw1 = this.image?.width();
+
+        let ih2 = this.image?.height();
+        let iw2 = this.image?.width();
+
         if (this.image?.width() > this.image?.height()) {
-          const ratio = this.image?.width() / this.image?.height();
           const scaleRatio = this.width / this.image?.width();
-          this.image?.scale({ x: scaleRatio, y: scaleRatio });
+          //this.image?.scale({ x: scaleRatio, y: scaleRatio });
+          ih2 = ih1 * scaleRatio;
+          iw2 = iw1 * scaleRatio;
         } else {
-          const ratio = this.image?.width() / this.image?.height();
           const scaleRatio = this.height / this.image?.height();
-          this.image?.scale({ x: scaleRatio, y: scaleRatio });
+          // this.image?.height(ih1 * scaleRatio);
+          // this.image?.width(iw1 * scaleRatio);
+          ih2 = ih1 * scaleRatio;
+          iw2 = iw1 * scaleRatio;
         }
+
+        if (iw2 > this.width) {
+          const scaleRatio = this.width / iw2;
+          ih2 = ih2 * scaleRatio;
+          iw2 = iw2 * scaleRatio;
+        }
+        if (ih2 > this.height) {
+          const scaleRatio = this.height / ih2;
+          ih2 = ih2 * scaleRatio;
+          iw2 = iw2 * scaleRatio;
+        }
+
+        console.log('ih1: ' + ih1 + ' iw1: ' + iw1);
+        console.log('ih2: ' + ih2 + ' iw2: ' + iw2);
+
+        if (this.image) {
+          this.image?.height(ih2);
+          this.image?.width(iw2);
+        }
+
+        // if (this.image?.width() > this.width) {
+        //   const scaleRatio = this.width / this.image?.width();
+        //   this.image?.scale({ x: scaleRatio, y: scaleRatio });
+        //   this.image?.scale({ x: 1.5, y: 1.5 });
+        // }
+        // if (this.image?.height() > this.height) {
+        //   const scaleRatio = this.height / this.image?.height();
+        //   this.image?.scale({ x: scaleRatio, y: scaleRatio });
+        // }
       }
     });
   }
