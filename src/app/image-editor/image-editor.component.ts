@@ -164,13 +164,15 @@ export class ImageEditorComponent implements OnInit {
   setDefaultMode(selectedItem?: any) {
     this.stage!.off('click tap');
     this.stage!.off('dblclick dbltap');
+    this.stage!.off('touchstart');
+    this.stage!.off('touchend');
 
     this.stage!.on('click tap', (e) => {
       if (this.textNode && this.textarea) {
         this.swapBack();
         return;
       }
-      if (e.target === this.stage) {
+      if (e.target === this.stage || e.target === this.image) {
         this.transformer.nodes([]);
         return;
       }
@@ -315,7 +317,25 @@ export class ImageEditorComponent implements OnInit {
       }
       this.addLine(this.centerX, this.centerY);
     });
+    this.stage!.on('touchstart', (e) => {
+      if (e.evt?.changedTouches?.length > 0) {
+        this.firstPoint.x = e.evt.changedTouches[0].pageX;
+        this.firstPoint.y = e.evt.changedTouches[0].pageY;
+      }
+    });
+    this.stage!.on('touchend', (e) => {
+      if (e.evt?.changedTouches?.length > 0) {
+        this.addLine(
+          this.firstPoint.x,
+          this.firstPoint.y,
+          e.evt.changedTouches[0].pageX,
+          e.evt.changedTouches[0].pageY
+        );
+      }
+    });
   }
+
+  firstPoint = { x: 0, y: 0 };
 
   setAddArrowMode() {
     this.statusMessage = 'Click on the image to add an arrow';
@@ -325,7 +345,7 @@ export class ImageEditorComponent implements OnInit {
     this.stage!.on('click tap', (e) => {
       // if mobile
       if (e.evt?.changedTouches?.length > 0) {
-        this.addLine(
+        this.addArrow(
           e.evt.changedTouches[0].pageX,
           e.evt.changedTouches[0].pageY
         );
@@ -333,10 +353,26 @@ export class ImageEditorComponent implements OnInit {
       }
       // if desktop
       if (e.evt.button === 0) {
-        this.addLine(e.evt.offsetX, e.evt.offsetY);
+        this.addArrow(e.evt.offsetX, e.evt.offsetY);
         return;
       }
       this.addArrow(this.centerX, this.centerY);
+    });
+    this.stage!.on('touchstart', (e) => {
+      if (e.evt?.changedTouches?.length > 0) {
+        this.firstPoint.x = e.evt.changedTouches[0].pageX;
+        this.firstPoint.y = e.evt.changedTouches[0].pageY;
+      }
+    });
+    this.stage!.on('touchend', (e) => {
+      if (e.evt?.changedTouches?.length > 0) {
+        this.addArrow(
+          this.firstPoint.x,
+          this.firstPoint.y,
+          e.evt.changedTouches[0].pageX,
+          e.evt.changedTouches[0].pageY
+        );
+      }
     });
   }
 
@@ -442,9 +478,9 @@ export class ImageEditorComponent implements OnInit {
     this.setDefaultMode(tn);
   }
 
-  addLine(x: number, y: number) {
-    const line = new Konva.Line({
-      points: [x - 100, y, x + 100, y],
+  addLine(startX: number, startY: number, endX?: number, endY?: number) {
+    let line = new Konva.Line({
+      points: [startX - 100, startY, startX + 100, startY],
       stroke: this.color,
       strokeWidth: 4,
       lineCap: 'round',
@@ -452,17 +488,32 @@ export class ImageEditorComponent implements OnInit {
       draggable: true,
       name: 'line',
     });
+    if (
+      endX != undefined &&
+      endY != undefined &&
+      Math.abs(endX! - startX) + Math.abs(endY! - startY) >= 100
+    ) {
+      line = new Konva.Line({
+        points: [startX, startY, endX, endY],
+        stroke: this.color,
+        strokeWidth: 4,
+        lineCap: 'round',
+        lineJoin: 'round',
+        draggable: true,
+        name: 'line',
+      });
+    }
 
     this.layer.add(line);
     this.transformer.nodes([line]);
     this.setDefaultMode(line);
   }
 
-  addArrow(x: number, y: number) {
+  addArrow(startX: number, startY: number, endX?: number, endY?: number) {
     var arrow = new Konva.Arrow({
-      x: x,
-      y: y,
-      points: [0, 0, 200, 0],
+      x: startX,
+      y: startY,
+      points: [startX - 100, startY, startX + 100, startY],
       pointerLength: 20,
       pointerWidth: 20,
       fill: 'black',
@@ -472,17 +523,27 @@ export class ImageEditorComponent implements OnInit {
       name: 'arrow',
     });
 
+    if (
+      endX != undefined &&
+      endY != undefined &&
+      Math.abs(endX! - startX) + Math.abs(endY! - startY) >= 100
+    ) {
+      var arrow = new Konva.Arrow({
+        x: startX,
+        y: startY,
+        points: [0, 0, endX - startX, endY - startY],
+        pointerLength: 20,
+        pointerWidth: 20,
+        fill: 'black',
+        stroke: 'black',
+        strokeWidth: 4,
+        draggable: true,
+        name: 'arrow',
+      });
+    }
+
     this.layer.add(arrow);
     this.transformer.nodes([arrow]);
     this.setDefaultMode(arrow);
-  }
-
-  addTempLinePoints(x: number, y: number) {
-    const line = this.transformer.nodes()[0] as Konva.Line;
-    const points = line.points();
-    points.push(x);
-    points.push(y);
-    line.points(points);
-    this.layer.add(line);
   }
 }
