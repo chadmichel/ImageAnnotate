@@ -39,6 +39,8 @@ export class ImageEditorComponent implements OnInit {
   constructor() {}
 
   ngOnInit(): void {
+    this.drawContainer = document.getElementById('drawContainer');
+
     this.width = window.innerWidth;
     this.height = window.innerHeight - 50;
 
@@ -423,10 +425,15 @@ export class ImageEditorComponent implements OnInit {
     this.textarea = undefined;
   }
 
+  offsetY(y: number) {
+    this.drawContainer = document.getElementById('drawContainer');
+    return y - this.drawContainer.offsetTop;
+  }
+
   addRect(x: number, y: number) {
     const box = new Konva.Rect({
-      x: x,
-      y: y,
+      x: x - 100,
+      y: this.offsetY(y) - 50,
       width: 200,
       height: 100,
 
@@ -445,7 +452,7 @@ export class ImageEditorComponent implements OnInit {
   addCircle(x: number, y: number) {
     const circleNode = new Konva.Circle({
       x: x,
-      y: y,
+      y: this.offsetY(y),
       height: 100,
 
       stroke: this.color,
@@ -463,7 +470,7 @@ export class ImageEditorComponent implements OnInit {
   addText(x: number, y: number) {
     const tn = new Konva.Text({
       x: x,
-      y: y,
+      y: this.offsetY(y),
       width: 200,
       text: 'Edit Me',
       fontSize: this.defaultFontSize,
@@ -480,7 +487,12 @@ export class ImageEditorComponent implements OnInit {
 
   addLine(startX: number, startY: number, endX?: number, endY?: number) {
     let line = new Konva.Line({
-      points: [startX - 100, startY, startX + 100, startY],
+      points: [
+        startX - 100,
+        this.offsetY(startY),
+        startX + 100,
+        this.offsetY(startY),
+      ],
       stroke: this.color,
       strokeWidth: 4,
       lineCap: 'round',
@@ -491,10 +503,12 @@ export class ImageEditorComponent implements OnInit {
     if (
       endX != undefined &&
       endY != undefined &&
-      Math.abs(endX! - startX) + Math.abs(endY! - startY) >= 100
+      Math.abs(endX! - startX) +
+        Math.abs(this.offsetY(endY)! - this.offsetY(startY)) >=
+        100
     ) {
       line = new Konva.Line({
-        points: [startX, startY, endX, endY],
+        points: [startX, this.offsetY(startY), endX, this.offsetY(endY)],
         stroke: this.color,
         strokeWidth: 4,
         lineCap: 'round',
@@ -513,7 +527,12 @@ export class ImageEditorComponent implements OnInit {
     var arrow = new Konva.Arrow({
       x: startX,
       y: startY,
-      points: [startX - 100, startY, startX + 100, startY],
+      points: [
+        startX - 100,
+        this.offsetY(startY),
+        startX + 100,
+        this.offsetY(startY),
+      ],
       pointerLength: 20,
       pointerWidth: 20,
       fill: 'black',
@@ -530,8 +549,13 @@ export class ImageEditorComponent implements OnInit {
     ) {
       var arrow = new Konva.Arrow({
         x: startX,
-        y: startY,
-        points: [0, 0, endX - startX, endY - startY],
+        y: this.offsetY(startY),
+        points: [
+          0,
+          0,
+          endX - startX,
+          this.offsetY(endY) - this.offsetY(startY),
+        ],
         pointerLength: 20,
         pointerWidth: 20,
         fill: 'black',
