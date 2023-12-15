@@ -268,7 +268,7 @@ export class ImageEditorComponent implements OnInit {
       }
       // if desktop
       if (e.evt.button === 0) {
-        this.addCircle(e.evt.offsetX, e.evt.offsetY);
+        this.addCircle(e.evt.x, e.evt.y);
         return;
       }
       this.addCircle(this.centerX, this.centerY);
@@ -291,7 +291,7 @@ export class ImageEditorComponent implements OnInit {
       }
       // if desktop
       if (e.evt.button === 0) {
-        this.addText(e.evt.offsetX, e.evt.offsetY);
+        this.addText(e.evt.x, e.evt.y);
         return;
       }
       this.addText(this.centerX, this.centerY);
@@ -469,7 +469,7 @@ export class ImageEditorComponent implements OnInit {
 
   addText(x: number, y: number) {
     const tn = new Konva.Text({
-      x: x,
+      x: x - 100,
       y: this.offsetY(y),
       width: 200,
       text: 'Edit Me',
@@ -525,8 +525,6 @@ export class ImageEditorComponent implements OnInit {
 
   addArrow(startX: number, startY: number, endX?: number, endY?: number) {
     var arrow = new Konva.Arrow({
-      x: startX,
-      y: startY,
       points: [
         startX - 100,
         this.offsetY(startY),
@@ -545,24 +543,18 @@ export class ImageEditorComponent implements OnInit {
     if (
       endX != undefined &&
       endY != undefined &&
-      Math.abs(endX! - startX) + Math.abs(endY! - startY) >= 100
+      Math.abs(endX! - startX) +
+        Math.abs(this.offsetY(endY)! - this.offsetY(startY)) >=
+        100
     ) {
-      var arrow = new Konva.Arrow({
-        x: startX,
-        y: this.offsetY(startY),
-        points: [
-          0,
-          0,
-          endX - startX,
-          this.offsetY(endY) - this.offsetY(startY),
-        ],
+      arrow = new Konva.Arrow({
+        points: [startX, this.offsetY(startY), endX, this.offsetY(endY)],
+        stroke: this.color,
+        strokeWidth: 4,
         pointerLength: 20,
         pointerWidth: 20,
-        fill: 'black',
-        stroke: 'black',
-        strokeWidth: 4,
         draggable: true,
-        name: 'arrow',
+        name: 'line',
       });
     }
 
