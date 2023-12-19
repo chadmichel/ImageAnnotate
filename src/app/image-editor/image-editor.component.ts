@@ -182,11 +182,14 @@ export class ImageEditorComponent implements OnInit {
     };
   }
 
+  addItem(item: any) {
+    this.annotations.push(item);
+    this.layer.add(item);
+    this.setDefaultMode(item);
+  }
+
   setDefaultMode(selectedItem?: any) {
-    this.stage!.off('click tap');
-    this.stage!.off('dblclick dbltap');
-    this.stage!.off('touchstart');
-    this.stage!.off('touchend');
+    this.disableAllModes();
 
     for (var i = 0; i < this.layer.children.length; i++) {
       this.layer.children[i].draggable(false);
@@ -257,153 +260,201 @@ export class ImageEditorComponent implements OnInit {
     }
   }
 
-  setAddRectMode() {
-    this.statusMessage = 'Click on the image to add a rectangle';
+  disableAllModes() {
     this.transformer.nodes([]);
     this.stage!.off('click tap');
     this.stage!.off('dblclick dbltap');
+    this.stage!.off('touchstart mousedown');
+    this.stage!.off('touchend mouseup');
+  }
+
+  setAddRectMode() {
+    this.statusMessage = 'Click on the image to add a rectangle';
+    this.disableAllModes();
+
     this.stage!.on('click tap', (e) => {
-      // if mobile
-      if (e.evt?.changedTouches?.length > 0) {
-        this.addRect(
-          e.evt.changedTouches[0].pageX,
-          e.evt.changedTouches[0].pageY
-        );
-        return;
+      const pos = this.stage!.getPointerPosition();
+      if (pos && pos.x && pos.y) {
+        this.addRect(pos.x, pos.y);
+      } else {
+        this.addRect(this.centerX, this.centerY);
       }
-      // if desktop
-      if (e.evt.button === 0) {
-        this.addRect(e.evt.offsetX, e.evt.offsetY);
-        return;
-      }
-      this.addRect(this.centerX, this.centerY);
     });
+  }
+
+  addRect(x: number, y: number) {
+    const box = new Konva.Rect({
+      x: x - 100,
+      y: this.offsetY(y) - 50,
+      width: 200,
+      height: 100,
+
+      stroke: this.color,
+      strokeWidth: 4,
+      draggable: true,
+      name: 'rect',
+    });
+
+    this.addItem(box);
   }
 
   setAddCircleMode() {
     this.statusMessage = 'Click on the image to add a circle';
-    this.transformer.nodes([]);
-    this.stage!.off('click tap');
-    this.stage!.off('dblclick dbltap');
+    this.disableAllModes();
+
     this.stage!.on('click tap', (e) => {
-      // if mobile
-      if (e.evt?.changedTouches?.length > 0) {
-        this.addCircle(
-          e.evt.changedTouches[0].pageX,
-          e.evt.changedTouches[0].pageY
-        );
-        return;
+      const pos = this.stage!.getPointerPosition();
+      if (pos && pos.x && pos.y) {
+        this.addCircle(pos.x, pos.y);
+      } else {
+        this.addCircle(this.centerX, this.centerY);
       }
-      // if desktop
-      if (e.evt.button === 0) {
-        this.addCircle(e.evt.x, e.evt.y);
-        return;
-      }
-      this.addCircle(this.centerX, this.centerY);
     });
+  }
+
+  addCircle(x: number, y: number) {
+    const circleNode = new Konva.Circle({
+      x: x,
+      y: this.offsetY(y),
+      height: 100,
+
+      stroke: this.color,
+      strokeWidth: 4,
+      draggable: true,
+      name: 'circle',
+    });
+
+    this.addItem(circleNode);
   }
 
   setAddTextMode() {
     this.statusMessage = 'Click on the image to add text';
-    this.transformer.nodes([]);
-    this.stage!.off('click tap');
-    this.stage!.off('dblclick dbltap');
+    this.disableAllModes();
+
     this.stage!.on('click tap', (e) => {
-      // if mobile
-      if (e.evt?.changedTouches?.length > 0) {
-        this.addText(
-          e.evt.changedTouches[0].pageX,
-          e.evt.changedTouches[0].pageY
-        );
-        return;
+      const pos = this.stage!.getPointerPosition();
+      if (pos && pos.x && pos.y) {
+        this.addText(pos.x, pos.y);
+      } else {
+        this.addText(this.centerX, this.centerY);
       }
-      // if desktop
-      if (e.evt.button === 0) {
-        this.addText(e.evt.x, e.evt.y);
-        return;
-      }
-      this.addText(this.centerX, this.centerY);
     });
+  }
+
+  addText(x: number, y: number) {
+    const tn = new Konva.Text({
+      x: x - 100,
+      y: this.offsetY(y),
+      width: 200,
+      text: 'Edit Me',
+      fontSize: this.defaultFontSize,
+      draggable: true,
+      fill: this.color,
+      align: 'center',
+      name: 'text',
+    });
+
+    this.addItem(tn);
   }
 
   setAddLineMode() {
     this.statusMessage = 'Click on the image to add a line';
-    this.transformer.nodes([]);
-    this.stage!.off('click tap');
-    this.stage!.off('dblclick dbltap');
-    this.stage!.on('click tap', (e) => {
-      // if mobile
-      if (e.evt?.changedTouches?.length > 0) {
-        this.addLine(
-          e.evt.changedTouches[0].pageX,
-          e.evt.changedTouches[0].pageY
-        );
-        return;
-      }
-      // if desktop
-      if (e.evt.button === 0) {
-        this.addLine(e.evt.offsetX, e.evt.offsetY);
-        return;
-      }
-      this.addLine(this.centerX, this.centerY);
+    this.disableAllModes();
+
+    this.stage!.on('touchstart mousedown', (e) => {
+      const pos = this.stage!.getPointerPosition();
+      this.firstPoint.x = pos!.x;
+      this.firstPoint.y = pos!.y;
     });
-    this.stage!.on('touchstart', (e) => {
-      if (e.evt?.changedTouches?.length > 0) {
-        this.firstPoint.x = e.evt.changedTouches[0].pageX;
-        this.firstPoint.y = e.evt.changedTouches[0].pageY;
-      }
+    this.stage!.on('touchend mouseup', (e) => {
+      const pos = this.stage!.getPointerPosition();
+      this.addLine(this.firstPoint.x, this.firstPoint.y, pos?.x, pos?.y);
     });
-    this.stage!.on('touchend', (e) => {
-      if (e.evt?.changedTouches?.length > 0) {
-        this.addLine(
-          this.firstPoint.x,
-          this.firstPoint.y,
-          e.evt.changedTouches[0].pageX,
-          e.evt.changedTouches[0].pageY
-        );
-      }
+  }
+
+  addLine(startX: number, startY: number, endX?: number, endY?: number) {
+    let line = new Konva.Line({
+      points: [
+        startX - 100,
+        this.offsetY(startY),
+        startX + 100,
+        this.offsetY(startY),
+      ],
+      stroke: this.color,
+      strokeWidth: 4,
+      lineCap: 'round',
+      lineJoin: 'round',
+      draggable: true,
+      name: 'line',
     });
+    if (
+      endX != undefined &&
+      endY != undefined &&
+      Math.abs(endX! - startX) +
+        Math.abs(this.offsetY(endY)! - this.offsetY(startY)) >=
+        100
+    ) {
+      line = new Konva.Line({
+        points: [startX, this.offsetY(startY), endX, this.offsetY(endY)],
+        stroke: this.color,
+        strokeWidth: 4,
+        lineCap: 'round',
+        lineJoin: 'round',
+        draggable: true,
+        name: 'line',
+      });
+    }
+
+    this.addItem(line);
   }
 
   firstPoint = { x: 0, y: 0 };
 
   setAddArrowMode() {
     this.statusMessage = 'Click on the image to add an arrow';
-    this.transformer.nodes([]);
-    this.stage!.off('click tap');
-    this.stage!.off('dblclick dbltap');
-    this.stage!.on('click tap', (e) => {
-      // if mobile
-      if (e.evt?.changedTouches?.length > 0) {
-        this.addArrow(
-          e.evt.changedTouches[0].pageX,
-          e.evt.changedTouches[0].pageY
-        );
-        return;
-      }
-      // if desktop
-      if (e.evt.button === 0) {
-        this.addArrow(e.evt.offsetX, e.evt.offsetY);
-        return;
-      }
-      this.addArrow(this.centerX, this.centerY);
+    this.disableAllModes();
+
+    this.stage!.on('touchstart mousedown', (e) => {
+      const pos = this.stage!.getPointerPosition();
+      this.firstPoint.x = pos!.x;
+      this.firstPoint.y = pos!.y;
     });
-    this.stage!.on('touchstart', (e) => {
-      if (e.evt?.changedTouches?.length > 0) {
-        this.firstPoint.x = e.evt.changedTouches[0].pageX;
-        this.firstPoint.y = e.evt.changedTouches[0].pageY;
-      }
+    this.stage!.on('touchend mouseup', (e) => {
+      const pos = this.stage!.getPointerPosition();
+      this.addArrow(this.firstPoint.x, this.firstPoint.y, pos?.x, pos?.y);
     });
-    this.stage!.on('touchend', (e) => {
-      if (e.evt?.changedTouches?.length > 0) {
-        this.addArrow(
-          this.firstPoint.x,
-          this.firstPoint.y,
-          e.evt.changedTouches[0].pageX,
-          e.evt.changedTouches[0].pageY
-        );
-      }
+  }
+
+  addArrow(startX: number, startY: number, endX?: number, endY?: number) {
+    var arrow = new Konva.Arrow({
+      points: [startX - 100, startY, startX + 100, startY],
+      pointerLength: 20,
+      pointerWidth: 20,
+      fill: this.color,
+      stroke: this.color,
+      strokeWidth: 4,
+      draggable: true,
+      name: 'arrow',
     });
+
+    if (
+      endX != undefined &&
+      endY != undefined &&
+      Math.abs(endX! - startX) + Math.abs(endY - startY) >= 100
+    ) {
+      arrow = new Konva.Arrow({
+        points: [startX, startY, endX, endY],
+        stroke: this.color,
+        strokeWidth: 4,
+        pointerLength: 20,
+        pointerWidth: 20,
+        draggable: true,
+        strokeHitEnabled: true,
+        name: 'arrow',
+      });
+    }
+
+    this.addItem(arrow);
   }
 
   isPaint = false;
@@ -412,11 +463,9 @@ export class ImageEditorComponent implements OnInit {
   // https://konvajs.org/docs/sandbox/Free_Drawing.html
   setPaintBrushMode() {
     this.statusMessage = 'Click/drag to draw on the image';
-    this.transformer.nodes([]);
-    this.stage!.off('click tap');
-    this.stage!.off('dblclick dbltap');
+    this.disableAllModes();
 
-    this.stage!.on('touchstart', (e) => {
+    this.stage!.on('touchstart mousedown', (e) => {
       this.isPaint = true;
       var pos = this.stage!.getPointerPosition();
       this.brushLine = new Konva.Line({
@@ -431,7 +480,7 @@ export class ImageEditorComponent implements OnInit {
       this.layer.add(this.brushLine);
       this.annotations.push(this.brushLine);
     });
-    this.stage!.on('touchend', (e) => {
+    this.stage!.on('touchend mouseup', (e) => {
       this.isPaint = false;
       this.setDefaultMode(this.brushLine);
     });
@@ -501,146 +550,6 @@ export class ImageEditorComponent implements OnInit {
   }
 
   offsetY(y: number) {
-    this.drawContainer = document.getElementById('drawContainer');
-    return y - this.drawContainer.offsetTop;
-  }
-
-  addRect(x: number, y: number) {
-    const box = new Konva.Rect({
-      x: x - 100,
-      y: this.offsetY(y) - 50,
-      width: 200,
-      height: 100,
-
-      stroke: this.color,
-      strokeWidth: 4,
-      draggable: true,
-      name: 'rect',
-    });
-
-    this.annotations.push(box);
-    this.layer.add(box);
-    this.transformer.nodes([box]);
-
-    this.setDefaultMode(box);
-  }
-
-  addCircle(x: number, y: number) {
-    const circleNode = new Konva.Circle({
-      x: x,
-      y: this.offsetY(y),
-      height: 100,
-
-      stroke: this.color,
-      strokeWidth: 4,
-      draggable: true,
-      name: 'circle',
-    });
-
-    this.annotations.push(circleNode);
-    this.layer.add(circleNode);
-    this.transformer.nodes([circleNode]);
-
-    this.setDefaultMode(circleNode);
-  }
-
-  addText(x: number, y: number) {
-    const tn = new Konva.Text({
-      x: x - 100,
-      y: this.offsetY(y),
-      width: 200,
-      text: 'Edit Me',
-      fontSize: this.defaultFontSize,
-      draggable: true,
-      fill: this.color,
-      align: 'center',
-      name: 'text',
-    });
-
-    this.annotations.push(tn);
-    this.layer.add(tn);
-    this.transformer.nodes([tn]);
-    this.setDefaultMode(tn);
-  }
-
-  addLine(startX: number, startY: number, endX?: number, endY?: number) {
-    let line = new Konva.Line({
-      points: [
-        startX - 100,
-        this.offsetY(startY),
-        startX + 100,
-        this.offsetY(startY),
-      ],
-      stroke: this.color,
-      strokeWidth: 4,
-      lineCap: 'round',
-      lineJoin: 'round',
-      draggable: true,
-      name: 'line',
-    });
-    if (
-      endX != undefined &&
-      endY != undefined &&
-      Math.abs(endX! - startX) +
-        Math.abs(this.offsetY(endY)! - this.offsetY(startY)) >=
-        100
-    ) {
-      line = new Konva.Line({
-        points: [startX, this.offsetY(startY), endX, this.offsetY(endY)],
-        stroke: this.color,
-        strokeWidth: 4,
-        lineCap: 'round',
-        lineJoin: 'round',
-        draggable: true,
-        name: 'line',
-      });
-    }
-
-    this.annotations.push(line);
-    this.layer.add(line);
-    this.transformer.nodes([line]);
-    this.setDefaultMode(line);
-  }
-
-  addArrow(startX: number, startY: number, endX?: number, endY?: number) {
-    var arrow = new Konva.Arrow({
-      points: [
-        startX - 100,
-        this.offsetY(startY),
-        startX + 100,
-        this.offsetY(startY),
-      ],
-      pointerLength: 20,
-      pointerWidth: 20,
-      fill: this.color,
-      stroke: this.color,
-      strokeWidth: 4,
-      draggable: true,
-      name: 'arrow',
-    });
-
-    if (
-      endX != undefined &&
-      endY != undefined &&
-      Math.abs(endX! - startX) +
-        Math.abs(this.offsetY(endY)! - this.offsetY(startY)) >=
-        100
-    ) {
-      arrow = new Konva.Arrow({
-        points: [startX, this.offsetY(startY), endX, this.offsetY(endY)],
-        stroke: this.color,
-        strokeWidth: 4,
-        pointerLength: 20,
-        pointerWidth: 20,
-        draggable: true,
-        strokeHitEnabled: true,
-        name: 'line',
-      });
-    }
-
-    this.annotations.push(arrow);
-    this.layer.add(arrow);
-    this.transformer.nodes([arrow]);
-    this.setDefaultMode(arrow);
+    return y;
   }
 }
