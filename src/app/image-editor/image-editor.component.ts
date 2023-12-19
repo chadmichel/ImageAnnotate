@@ -429,6 +429,7 @@ export class ImageEditorComponent implements OnInit {
         name: 'brush',
       });
       this.layer.add(this.brushLine);
+      this.annotations.push(this.brushLine);
     });
     this.stage!.on('touchend', (e) => {
       this.isPaint = false;
@@ -611,8 +612,8 @@ export class ImageEditorComponent implements OnInit {
       ],
       pointerLength: 20,
       pointerWidth: 20,
-      fill: 'black',
-      stroke: 'black',
+      fill: this.color,
+      stroke: this.color,
       strokeWidth: 4,
       draggable: true,
       name: 'arrow',
