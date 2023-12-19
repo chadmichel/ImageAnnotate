@@ -253,8 +253,10 @@ export class ImageEditorComponent implements OnInit {
 
     this.statusMessage = 'Add shapes to the image';
     if (selectedItem) {
-      this.transformer.nodes([selectedItem]);
-      selectedItem.draggable(true);
+      setTimeout(() => {
+        this.transformer.nodes([selectedItem]);
+        selectedItem.draggable(true);
+      }, 100);
     } else {
       this.transformer.nodes([]);
     }
