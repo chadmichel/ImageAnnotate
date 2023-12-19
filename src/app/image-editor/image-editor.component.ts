@@ -36,6 +36,8 @@ export class ImageEditorComponent implements OnInit {
   file: any;
   imageUrl: string = 'assets/can.jpg';
 
+  annotations: any[] = [];
+
   constructor() {}
 
   ngOnInit(): void {
@@ -130,7 +132,24 @@ export class ImageEditorComponent implements OnInit {
     });
   }
 
+  clear() {
+    while (this.annotations.length > 0) {
+      this.undo();
+    }
+  }
+
+  undo() {
+    if (this.annotations.length > 0) {
+      const lastAnnotation = this.annotations.pop();
+      this.transformer.nodes([]);
+      lastAnnotation?.remove();
+      this.layer.draw();
+      this.setDefaultMode();
+    }
+  }
+
   async downloadImage() {
+    this.transformer.nodes([]);
     var i = (await this.stage?.toImage()) as any;
     var d = await this.stage?.toDataURL();
 
@@ -169,18 +188,26 @@ export class ImageEditorComponent implements OnInit {
     this.stage!.off('touchstart');
     this.stage!.off('touchend');
 
+    for (var i = 0; i < this.layer.children.length; i++) {
+      this.layer.children[i].draggable(false);
+    }
+
     this.stage!.on('click tap', (e) => {
       if (this.textNode && this.textarea) {
         this.swapBack();
         return;
       }
       if (e.target === this.stage || e.target === this.image) {
+        this.transformer.nodes().forEach((node) => {
+          node.draggable(false);
+        });
         this.transformer.nodes([]);
         return;
       }
 
       if (e.target != this.image) {
         this.transformer.nodes([e.target]);
+        e.target.draggable(true);
       }
     });
 
@@ -224,6 +251,7 @@ export class ImageEditorComponent implements OnInit {
     this.statusMessage = 'Add shapes to the image';
     if (selectedItem) {
       this.transformer.nodes([selectedItem]);
+      selectedItem.draggable(true);
     } else {
       this.transformer.nodes([]);
     }
@@ -378,6 +406,48 @@ export class ImageEditorComponent implements OnInit {
     });
   }
 
+  isPaint = false;
+  brushLine: Konva.Line | undefined = undefined;
+
+  // https://konvajs.org/docs/sandbox/Free_Drawing.html
+  setPaintBrushMode() {
+    this.statusMessage = 'Click/drag to draw on the image';
+    this.transformer.nodes([]);
+    this.stage!.off('click tap');
+    this.stage!.off('dblclick dbltap');
+
+    this.stage!.on('touchstart', (e) => {
+      this.isPaint = true;
+      var pos = this.stage!.getPointerPosition();
+      this.brushLine = new Konva.Line({
+        stroke: this.color,
+        strokeWidth: 5,
+        globalCompositeOperation: 'source-over',
+        lineCap: 'round',
+        lineJoin: 'round',
+        points: [pos!.x, pos!.y, pos!.x, pos!.y],
+        name: 'brush',
+      });
+      this.layer.add(this.brushLine);
+    });
+    this.stage!.on('touchend', (e) => {
+      this.isPaint = false;
+      this.setDefaultMode(this.brushLine);
+    });
+    this.stage!.on('mousemove touchmove', (e) => {
+      if (!this.isPaint) {
+        return;
+      }
+
+      // prevent scrolling on touch devices
+      e.evt.preventDefault();
+
+      const pos = this.stage!.getPointerPosition();
+      var newPoints = this.brushLine!.points().concat([pos!.x, pos!.y]);
+      this.brushLine!.points(newPoints);
+    });
+  }
+
   setColor(color: string) {
     this.color = color;
 
@@ -401,6 +471,10 @@ export class ImageEditorComponent implements OnInit {
           this.layer.draw();
         }
         if (selectedNode.attrs.name === 'arrow') {
+          selectedNode.stroke(color);
+          this.layer.draw();
+        }
+        if (selectedNode.attrs.name === 'brush') {
           selectedNode.stroke(color);
           this.layer.draw();
         }
@@ -443,6 +517,7 @@ export class ImageEditorComponent implements OnInit {
       name: 'rect',
     });
 
+    this.annotations.push(box);
     this.layer.add(box);
     this.transformer.nodes([box]);
 
@@ -461,6 +536,7 @@ export class ImageEditorComponent implements OnInit {
       name: 'circle',
     });
 
+    this.annotations.push(circleNode);
     this.layer.add(circleNode);
     this.transformer.nodes([circleNode]);
 
@@ -480,6 +556,7 @@ export class ImageEditorComponent implements OnInit {
       name: 'text',
     });
 
+    this.annotations.push(tn);
     this.layer.add(tn);
     this.transformer.nodes([tn]);
     this.setDefaultMode(tn);
@@ -518,6 +595,7 @@ export class ImageEditorComponent implements OnInit {
       });
     }
 
+    this.annotations.push(line);
     this.layer.add(line);
     this.transformer.nodes([line]);
     this.setDefaultMode(line);
@@ -554,10 +632,12 @@ export class ImageEditorComponent implements OnInit {
         pointerLength: 20,
         pointerWidth: 20,
         draggable: true,
+        strokeHitEnabled: true,
         name: 'line',
       });
     }
 
+    this.annotations.push(arrow);
     this.layer.add(arrow);
     this.transformer.nodes([arrow]);
     this.setDefaultMode(arrow);

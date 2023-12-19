@@ -12,8 +12,12 @@
     <button (click)="setAddTextMode()">Add Text</button>
     <button (click)="setAddLineMode()">Add Line</button>
     <button (click)="setAddArrowMode()">Add Arrow</button>
+    <button (click)="setPaintBrushMode()">Paint Brush</button>
     <button (click)="setColor('black')">Black</button>
     <button (click)="setColor('white')">White</button>
+    <button (click)="setColor('red')">Red</button>
+    <button (click)="undo()">Undo</button>
+    <button (click)="clear()">Clear</button>
     <button (click)="downloadImage()">Download Image</button>
   </div>
   <div id="drawContainer"></div>
